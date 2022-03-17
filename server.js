@@ -195,7 +195,7 @@ const root = {
       throw new Error(`App: ${input.name} already exists in the database.`);
     }
     
-    const id = uuid.v1();
+    const id = uuid.v4();
 
     DB["apps"].push({
       id: id,
@@ -211,8 +211,8 @@ const root = {
     if (eventNames.includes(input.name)) {
       throw new Error(`Event: ${input.name} already exists in the database.`);
     }
-    
-    const id = uuid.v1();
+
+    const id = uuid.v4();
 
     DB["events"].push({
       id: id,
@@ -226,7 +226,7 @@ const root = {
     if (stageNames.includes(input.name)) {
       throw new Error(`Stage: ${input.name} already exists in the database.`);
     }
-    const id = uuid.v1();
+    const id = uuid.v4();
 
     DB["stages"].push({
       id: id,

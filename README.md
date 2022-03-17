@@ -15,7 +15,7 @@ Tech
 Database
 - API pulls from locally hosted json file
 - Data persisted in-memory while server live at localhost:4000
-- GraphiQL @ [localhost:4000/graph](http://localhost:4000/graphql) to interact with and test the API
+- GraphiQL @ [localhost:4000/graphql](http://localhost:4000/graphql) to interact with and test the API
 
 Process
 - GraphQL Docs 
