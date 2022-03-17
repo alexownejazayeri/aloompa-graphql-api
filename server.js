@@ -78,7 +78,7 @@ class Event {
   constructor(id, name) {
     this.eventId = id;
     this.eventName = name;
-    this.event = DB["events"].find(
+    this.event = EVENTS.find(
       (el) => el.id === this.eventId || el.name === this.eventName
     );
   }
@@ -117,7 +117,7 @@ class Event {
 
   stage() {
     // get stage id and feed into new instance of Stage type
-    const stageId = DB["stages"].find((el) => el.id === this.event.stageId).id;
+    const stageId = STAGES.find((el) => el.id === this.event.stageId).id;
     const eventStage = new Stage(stageId);
     return eventStage;
   }
@@ -127,7 +127,7 @@ class Stage {
   constructor(id, name) {
     this.stageId = id;
     this.stageName = name;
-    this.stage = DB["stages"].find(
+    this.stage = STAGES.find(
       (el) => el.id === this.stageId || el.name === this.stageName
     );
   }
@@ -141,9 +141,7 @@ class Stage {
   }
 
   events() {
-    const eventsAtStage = DB["events"].filter(
-      (el) => el.stageId === this.stage.id
-    );
+    const eventsAtStage = EVENTS.filter((el) => el.stageId === this.stage.id);
     const events = eventsAtStage.map((el) => new Event(el.id));
     return events;
   }
@@ -153,7 +151,7 @@ class App {
   constructor(id, name) {
     this.appId = id;
     this.appName = name;
-    this.app = DB["apps"].find(
+    this.app = APPS.find(
       (el) => el.id === this.appId || el.name === this.appName
     );
   }
@@ -167,20 +165,20 @@ class App {
   }
 
   events() {
-    const eventsInApp = DB["events"].filter((el) => el.appId === this.appId);
+    const eventsInApp = EVENTS.filter((el) => el.appId === this.appId);
     const events = eventsInApp.map((el) => new Event(el.id));
     return events;
   }
 
   stages() {
-    const stageIdsInApp = DB["events"].map((el) => {
+    const stageIdsInApp = EVENTS.map((el) => {
       if (el["appId"] === this.app.id) {
         return el["stageId"];
       }
     });
-    const stagesInApp = DB["stages"]
-      .filter((el) => stageIdsInApp.includes(el["id"]))
-      .map((el) => new Stage(el.id));
+    const stagesInApp = STAGES.filter((el) =>
+      stageIdsInApp.includes(el["id"])
+    ).map((el) => new Stage(el.id));
     return stagesInApp;
   }
 }
@@ -194,10 +192,10 @@ const root = {
     if (appNames.includes(input.name)) {
       throw new Error(`App: ${input.name} already exists in the database.`);
     }
-    
+
     const id = uuid.v4();
 
-    DB["apps"].push({
+    APPS.push({
       id: id,
       name: input.name,
     });
@@ -214,7 +212,7 @@ const root = {
 
     const id = uuid.v4();
 
-    DB["events"].push({
+    EVENTS.push({
       id: id,
       ...input,
     });
@@ -228,7 +226,7 @@ const root = {
     }
     const id = uuid.v4();
 
-    DB["stages"].push({
+    STAGES.push({
       id: id,
       name: input.name,
     });
@@ -238,18 +236,43 @@ const root = {
 
   /*---------------- READ ----------------*/
   // List all apps, events, and stages
-  allApps: () => DB["apps"].map((el) => new App(el.id)),
-  allEvents: () => DB["events"].map((el) => new Event(el.id)),
-  allStages: () => DB["stages"].map((el) => new Stage(el.id)),
+  allApps: () => APPS.map((el) => new App(el.id)),
+  allEvents: () => EVENTS.map((el) => new Event(el.id)),
+  allStages: () => STAGES.map((el) => new Stage(el.id)),
 
   // Query single app, event, or stage
-  app: ({ id, name }) => new App(id, name),
-  event: ({ id, name }) => new Event(id, name),
-  stage: ({ id, name }) => new Stage(id, name),
+  app: ({ id }) => {
+    // Hideous last-minute error handling block to check id
+    if (id && !APPS.map((el) => el.id).includes(id)) {
+      throw new Error(`App ID ${id} not found in database. Try this! ${APPS[0]["id"]}`);
+    }
+    
+    return new App(id);
+    },
+  event: ({ id, name }) => {
+    // Hideous last-minute error handling block to check id & name
+    if (id && !EVENTS.map((el) => el.id).includes(id)) {
+      throw new Error(`Event ID ${id} not found in database. Try this! ${EVENTS[0]["id"]}`);
+    } else if (name && !EVENTS.map((el) => el.name).includes(name)) {
+      throw new Error(`Event name ${name} not found in database.`);
+    } 
+
+    return new Event(id, name);
+  },
+  stage: ({ id, name }) => {
+    // Hideous last-minute error handling block to check id & name
+    if (id && !STAGES.map((el) => el.id).includes(id)) {
+      throw new Error(`Stage ID ${id} not found in database. Try this! ${STAGES[0]["id"]}`);
+    } else if (name && !STAGES.map((el) => el.name).includes(name)) {
+      throw new Error(`Stage name ${name} not found in database.`);
+    }
+
+    return new Stage(id, name);
+  },
 
   // Query events that occur between two (2) dates
   getEventsBetween: ({ start, end }) => {
-    const eventsInRange = DB["events"].filter(
+    const eventsInRange = EVENTS.filter(
       (el) => el.startsAt >= start && el.endsAt <= end
     );
     const events = eventsInRange.map((el) => new Event(el.id));
@@ -259,9 +282,8 @@ const root = {
   /*---------------- UPDATE ---------------*/
   updateApp: ({ id, input }) => {
     // Assign repetitive stuff to variables
-    const apps = DB["apps"];
     const { name } = input;
-    const appIds = apps.map((el) => el.id);
+    const appIds = APPS.map((el) => el.id);
 
     // Check if app exists
     if (!appIds.includes(id)) {
@@ -269,27 +291,26 @@ const root = {
     }
 
     // Get index of app
-    const oldRecord = apps.find((el) => el.id === id);
-    const recordIndex = apps.indexOf(oldRecord);
+    const oldRecord = APPS.find((el) => el.id === id);
+    const recordIndex = APPS.indexOf(oldRecord);
 
     // Update app at index with input
-    apps[recordIndex].name = name;
+    APPS[recordIndex].name = name;
     return new App(id);
   },
   updateEvent: ({ id, input }) => {
-    const events = DB["events"];
-    const eventIds = events.map((el) => el.id);
+    const eventIds = EVENTS.map((el) => el.id);
 
     if (!eventIds.includes(id)) {
       throw new Error(`No event with id ${id} in database.`);
     }
 
     // Get index of event
-    const oldRecord = events.find((el) => el.id === id);
-    const recordIndex = events.indexOf(oldRecord);
+    const oldRecord = EVENTS.find((el) => el.id === id);
+    const recordIndex = EVENTS.indexOf(oldRecord);
 
     // Update event at index with input
-    events[recordIndex] = {
+    EVENTS[recordIndex] = {
       id: id,
       ...input,
     };
@@ -297,9 +318,8 @@ const root = {
   },
   updateStage: ({ id, input }) => {
     // Assign repetitive stuff to variables
-    const stages = DB["stages"];
     const { name } = input;
-    const stageIds = stages.map((el) => el.id);
+    const stageIds = STAGES.map((el) => el.id);
 
     // Check if stage exists
     if (!stageIds.includes(id)) {
@@ -307,19 +327,18 @@ const root = {
     }
 
     // Get index of stage
-    const oldRecord = stages.find((el) => el.id === id);
-    const recordIndex = stages.indexOf(oldRecord);
+    const oldRecord = STAGES.find((el) => el.id === id);
+    const recordIndex = STAGES.indexOf(oldRecord);
 
     // Update stage at index with input
-    stages[recordIndex].name = name;
+    STAGES[recordIndex].name = name;
     return new Stage(id);
   },
 
   /*---------------- DELETE ---------------*/
   deleteApp: ({ id }) => {
     // Assign repetitive stuff to variables
-    const apps = DB["apps"];
-    const appIds = apps.map((el) => el.id);
+    const appIds = APPS.map((el) => el.id);
 
     // Check if app exists
     if (!appIds.includes(id)) {
@@ -327,17 +346,16 @@ const root = {
     }
 
     // Get index of app
-    const oldRecord = apps.find((el) => el.id === id);
-    const recordIndex = apps.indexOf(oldRecord);
+    const oldRecord = APPS.find((el) => el.id === id);
+    const recordIndex = APPS.indexOf(oldRecord);
 
     // Remove app from database
-    apps.splice(recordIndex, 1);
+    APPS.splice(recordIndex, 1);
     return `Removed app with id ${id} from database`;
   },
   deleteEvent: ({ id }) => {
     // Assign repetitive stuff to variables
-    const events = DB["events"];
-    const eventIds = events.map((el) => el.id);
+    const eventIds = EVENTS.map((el) => el.id);
 
     // Check if event exists
     if (!eventIds.includes(id)) {
@@ -345,17 +363,16 @@ const root = {
     }
 
     // Get index of event
-    const oldRecord = events.find((el) => el.id === id);
-    const recordIndex = events.indexOf(oldRecord);
+    const oldRecord = EVENTS.find((el) => el.id === id);
+    const recordIndex = EVENTS.indexOf(oldRecord);
 
     // Remove app from database
-    events.splice(recordIndex, 1);
+    EVENTS.splice(recordIndex, 1);
     return `Removed event with id ${id} from database`;
   },
   deleteStage: ({ id }) => {
     // Assign repetitive stuff to variables
-    const stages = DB["stages"];
-    const stageIds = stages.map((el) => el.id);
+    const stageIds = STAGES.map((el) => el.id);
 
     // Check if stage exists
     if (!stageIds.includes(id)) {
@@ -363,11 +380,11 @@ const root = {
     }
 
     // Get index of stage
-    const oldRecord = stages.find((el) => el.id === id);
-    const recordIndex = stages.indexOf(oldRecord);
+    const oldRecord = STAGES.find((el) => el.id === id);
+    const recordIndex = STAGES.indexOf(oldRecord);
 
     // Remove stage from database
-    stages.splice(recordIndex, 1);
+    STAGES.splice(recordIndex, 1);
     return `Removed stage with id ${id} from database`;
   },
 };
