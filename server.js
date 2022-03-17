@@ -207,7 +207,7 @@ const root = {
     // Could write smarter if check based on start and end times later
     const eventNames = EVENTS.map((el) => el.name);
     if (eventNames.includes(input.name)) {
-      throw new Error(`Event: ${input.name} already exists in the database.`);
+     throw new Error(`Event: ${input.name} already exists in the database.`);
     }
 
     const id = uuid.v4();
