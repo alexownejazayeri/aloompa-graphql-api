@@ -1,0 +1,75 @@
+query eventQuery($eventId: ID!, $isEventQuery: Boolean!){
+  event(id: $eventId){
+    ... eventFields
+  }
+}
+
+query stageQuery($stageId: ID!){
+  stage(id: $stageId){
+    ...stageFields
+  }
+}
+
+query allEventsQuery ($isEventQuery: Boolean!){
+  allEvents{
+    id
+    stage {
+      
+    }
+  }
+}
+
+fragment allEventsFields on Event {
+  __typename
+  id
+  appId
+  stageId
+  name
+  description
+  image
+  startsAt
+  endsAt
+  stage {
+    id
+    name
+    events @include(if: $isEventQuery){
+      name
+    }
+  }
+}
+
+
+fragment eventFields on Event {
+  __typename
+  id
+  appId
+  stageId
+  name
+  description
+  image
+  startsAt
+  endsAt
+  stage{
+    id
+    name
+    events @skip(if: $isEventQuery){
+      name
+    }
+  }
+}
+
+fragment stageFields on Stage {
+  __typename
+  id
+  name
+  events{
+    id
+    appId
+    stageId
+    name
+    description
+    image
+    startsAt
+    endsAt
+  }
+}
