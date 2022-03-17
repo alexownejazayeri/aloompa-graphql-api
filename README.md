@@ -2,7 +2,9 @@
 
 ## Overview
 
-A GraphQL API to query apps, events, and stages given this [data set](https://assets.aloompa.com.s3.amazonaws.com/rappers/hiphopfest.json). Priorities of this version were to get something that first hits the mark on the requirements with aims of deployment AWS and refactoring for TypeScript with the remaining time.
+A GraphQL API to query apps, events, and stages given this [data set](https://assets.aloompa.com.s3.amazonaws.com/rappers/hiphopfest.json). Priority for this version is a project that passes the requirements.
+
+Up next: attempting to deploy to AWS and refactor for TypeScript (TS might be more aspirational) with the remaining time.
 
 Tech
 - JavaScript
