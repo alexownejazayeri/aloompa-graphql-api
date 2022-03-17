@@ -9,6 +9,7 @@
   "author": "Alex Ownejazayeri",
   "license": "MIT",
   "dependencies": {
+    "apollo-server-lambda": "^3.6.4",
     "express": "^4.17.3",
     "express-graphql": "^0.12.0",
     "graphql": "^15.8.0",
