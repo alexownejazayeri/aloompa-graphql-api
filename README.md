@@ -8,11 +8,9 @@ A GraphQL API to query apps, events, and stages given this [data set](https://as
 
 After coming across a ton of inspiring Apollo GraphQL projects, I cloned and converted this express.js project into an `apollo-server-lambda` project using serverless to deploy to an AWS lambda. 
 
-Since there's some time before EOD, I'm going to try to learn enough TypeScript to refactor the express version (or both).
-
 Here's a link to the [Apollo GraphQL playground](https://efaw8i6jre.execute-api.us-east-1.amazonaws.com/dev/graphql) deployed to AWS. Have a look! Was interesting learning how Apollo handles resolvers and typedefs. Can't tell if I prefer Express or Apollo, but had fun writing both.
 
-Plus, I mean, Apollo's interface is beauty and I was struck with by GQLSWAPI (see: below). Had to give it a shot!
+Plus, I mean, Apollo's interface is beauty and I was struck with by GQLSWAPI (see: below). Had to give it a shot.
 
 Tech Used 
 - JavaScript
